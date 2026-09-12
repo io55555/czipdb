@@ -1,0 +1,32 @@
+name: 'CI'
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Worker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSIONNOW=$(cat VERSION);echo [$VERSIONNOW];echo -e "VERSIONNOW=$VERSIONNOW\n" >> ${GITHUB_ENV};echo ${{ env.VERSIONNOW }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.VERSIONNOW }}
+          tag_name: ${{ env.VERSIONNOW }}
+          body_path: out/RELEASE.txt
+          files: |
+            out/*.ipdb
+            out/*.mmdb
+      - name: Clear Releases
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 5
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
